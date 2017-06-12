@@ -9,7 +9,7 @@ A folder named `virt_env_name` will be created and be used as your working direc
 
 ### OSX & Linux
 Clone this repo into your desired working directory.
-From cmd run `source checkDevNet.sh <virt_env_name>`
+From terminal run `source checkDevNet.sh <virt_env_name>`
 A folder named `virt_env_name` will be created and be used as your working directory for the Cisco DevNet DNA Express event. 
 
 ## What it does...

@@ -22,6 +22,9 @@ import sys
 import subprocess
 import os
 
+# Used for checking network connectivity
+import socket
+
 # Used for logging
 import time
 
@@ -50,6 +53,10 @@ GIT_REPO = "https://github.com/CiscoDevNet/devnet-express-code-samples.git"
 # Logging
 log_file = time.strftime("%Y%m%d%H%M%S") + "_check_devnet_log.txt"
 verbose_logging = False
+
+# Network connectivity check
+REMOTE_SERVER = "pypi.python.org"
+REMOTE_PORT = 443
 
 
 
@@ -156,6 +163,37 @@ def text_colour(string, colour):
 
 	# Return the original string encapsulated in ANSI colour codes
 	return result
+
+
+
+
+
+"""
+Function: 		check_network
+
+Description:	Used to check network connectivity
+
+Arguments:		remote_host - Remote host to check TCP network connectivity against
+				remote_port - Remote TCP port to check network connectivity against
+
+Return:			result 	- Boolean of whether connection was successfuly.
+"""
+def check_network(remote_host, remote_port):
+
+	print(u"\tConnecting to %s on TCP port %s..." % (text_colour(remote_host,"blue"),text_colour(str(remote_port),"blue")))
+
+	# Try-catch to open tcp session with remote host
+	try:
+		host = socket.gethostbyname(remote_host)
+		s = socket.create_connection((host, remote_port), 2)
+		print("\t%s\n" % text_colour("SUCCESS","green"))
+		return True
+
+	except:
+		pass
+
+	print("\t%s\n" % text_colour("FAIL","red"))
+	return False
 
 
 
@@ -770,6 +808,12 @@ if __name__ == "__main__":
 	if len(sys.argv) > 2 and sys.argv[2] == "-v":
 		verbose_logging = True
 
+	# Check Network Connectivity
+	print(u"\nChecking Network Connectivity...\n")
+	net_connected = check_network(REMOTE_SERVER, REMOTE_PORT)
+	if not net_connected:
+		exit()
+
 	# Check Python Installation
 	print(u"\nChecking Python installation...\n")
 	python_str = check_python_version(userPython.major, userPython.minor, userPlatform)
@@ -778,7 +822,7 @@ if __name__ == "__main__":
 
 	# Check Virtual Environment Installation
 	print(u"\nChecking for Virtual Environment Python Library...\n")
-	required_libraries = ["virtualenv","requests"]
+	required_libraries = ["virtualenv","requests","wheel"]
 	virt_env_installed = check_python_libraries(required_libraries, userPlatform, False)
 
 	# Condition if pip not installed, virtual environment creation failed
@@ -795,7 +839,8 @@ if __name__ == "__main__":
 		print(u"\nPIP PATH = %s\n" % text_colour(pip_path,"magenta"))
 
 	# Check Python Libraries Installation
-	required_libraries = ["requests",
+	required_libraries = ["wheel",
+							"requests",
 							"netaddr",
 							"pyang",
 							"ncclient",
@@ -810,8 +855,7 @@ if __name__ == "__main__":
 							"pyasn1",
 							"pycparser",
 							"setuptools",
-							"six",
-							"wheel"]
+							"six"]
 	print(u"\nChecking Python Libraries...\n")
 	libraries_installed = check_python_libraries(required_libraries, userPlatform, pip_path)
 

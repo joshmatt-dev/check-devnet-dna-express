@@ -3,14 +3,16 @@ This is a a collection of scripts to check user workstation preparation for Cisc
 
 ## Usage
 ### Windows
-Clone this repo into your desired working directory.
-From cmd run `checkDevNet.bat <virt_env_name>`
-A folder named `virt_env_name` will be created and be used as your working directory for the Cisco DevNet DNA Express event. 
+- Clone this repo into your desired working directory.
+- Edit checkDevNet.py and add your Spark Token to `SPARK_TOKEN = ""` (i.e. `SPARK_TOKEN = "abcde12345"`)
+- From cmd run `checkDevNet.bat <virt_env_name>`.
+- A folder named `virt_env_name` will be created and be used as your working directory for the Cisco DevNet DNA Express event. 
 
 ### OSX & Linux
-Clone this repo into your desired working directory.
-From terminal run `source checkDevNet.sh <virt_env_name>`
-A folder named `virt_env_name` will be created and be used as your working directory for the Cisco DevNet DNA Express event. 
+- Clone this repo into your desired working directory.
+- Edit checkDevNet.py and add your Spark Token to `SPARK_TOKEN = ""` (i.e. `SPARK_TOKEN = "abcde12345"`)
+- From terminal run `source checkDevNet.sh <virt_env_name>`
+- A folder named `virt_env_name` will be created and be used as your working directory for the Cisco DevNet DNA Express event. 
 
 ## What it does...
 1. Checks system for installation of at least Python 3.5

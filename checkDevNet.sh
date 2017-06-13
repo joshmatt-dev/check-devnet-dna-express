@@ -38,6 +38,6 @@ else
 	else 
 		echo "Activating Virtual Python Environment"
 		chmod u+x ./$virt_env/bin/activate
-		source ./$virt_env/bin/activate
+		source ./$virt_env/bin/activate || cd -
 	fi
 fi

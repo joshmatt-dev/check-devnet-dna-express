@@ -58,6 +58,9 @@ verbose_logging = False
 REMOTE_SERVER = "pypi.python.org"
 REMOTE_PORT = 443
 
+# Remediate Action
+REMEDIATION = False
+
 
 
 #####################################################################
@@ -373,21 +376,22 @@ def check_python_libraries(required_libraries, sys_platform, venv_pip_str=False)
 		return False
 
 	# Upgrade pip installation
-	response = run_cmd(u"%s install --upgrade pip" % pip_str)
-	print("\tChecking for pip updates...")
-	if len(response) > 0:
+	if REMEDIATION:
+		response = run_cmd(u"%s install --upgrade pip" % pip_str)
+		print("\tChecking for pip updates...")
+		if len(response) > 0:
 
-		if "up-to-date" in response[0]:
-			print(u"\tPip is already up-to-date")
-			print("\t%s\n" % text_colour("SUCCESS","green"))
-		elif "Successfully installed pip" in response[0]:
-			print(u"\tPip updates installed successfully")
-			print("\t%s\n" % text_colour("SUCCESS","green"))
-		else:
-			print(u"\t%s\n" % text_colour("FAIL","red"))
+			if "up-to-date" in response[0]:
+				print(u"\tPip is already up-to-date")
+				print("\t%s\n" % text_colour("SUCCESS","green"))
+			elif "Successfully installed pip" in response[0]:
+				print(u"\tPip updates installed successfully")
+				print("\t%s\n" % text_colour("SUCCESS","green"))
+			else:
+				print(u"\t%s\n" % text_colour("FAIL","red"))
 
-		for each in response:
-			print(each)
+			for each in response:
+				print(each)
 
 
 
@@ -399,8 +403,6 @@ def check_python_libraries(required_libraries, sys_platform, venv_pip_str=False)
 		# Unable to find pip
 		print(u"\tUnable to find pip installation")
 		return False
-
-	#print("Response is %s" % response)
 
 	# Check for each package
 	for library in required_libraries:
@@ -420,31 +422,35 @@ def check_python_libraries(required_libraries, sys_platform, venv_pip_str=False)
 
 		# Install missing package
 		if install:
-			print(u"\t%s package is missing, attempting install..." % text_colour(library,"blue"))
-			pip_install = run_cmd("%s install %s" % (pip_str, library))
+			if REMEDIATION:
+				print(u"\t%s package is missing, attempting install..." % text_colour(library,"blue"))
+				pip_install = run_cmd("%s install %s" % (pip_str, library))
 
-			# Verify Successful install
-			response_inner = run_cmd("%s list" % pip_str)
-			install_success = False
-			for each in response_inner:
-				if each.startswith(library):
-					install_success = True
-					print("\t%s\n" % text_colour("SUCCESS","green"))
-			if not install_success:
+				# Verify Successful install
+				response_inner = run_cmd("%s list" % pip_str)
+				install_success = False
+				for each in response_inner:
+					if each.startswith(library):
+						install_success = True
+						print("\t%s\n" % text_colour("SUCCESS","green"))
+				if not install_success:
+					print(u"\t%s\n" % text_colour("FAIL","red"))
+					print(u"\t%s package installation was unsuccessful.\n" % library)
+
+					# Remediation advice based on platform
+					if sys_platform == 'Linux':
+
+						# Common failure is missing openssl library
+						print(u"\tTry running %s from terminal" % text_colour("sudo pip3 install virtualenv","yellow"))
+						print(u"\tAlso then try running %s from terminal\n" % text_colour("sudo apt-get update && sudo apt-get install libssl-dev","yellow"))
+
+					elif sys_platform == 'Darwin':
+
+						# Common failure is missing xcode tools
+						print(u"\tWere you prompted to install %s? This is required, try installing %s and rerun this script\n" % (text_colour("Xcode","yellow"),text_colour("Xcode","yellow")))
+			else:
+				print(u"\t%s package is missing." % text_colour(library,"blue"))
 				print(u"\t%s\n" % text_colour("FAIL","red"))
-				print(u"\t%s package installation was unsuccessful.\n" % library)
-
-				# Remediation advice based on platform
-				if sys_platform == 'Linux':
-
-					# Common failure is missing openssl library
-					print(u"\tTry running %s from terminal" % text_colour("sudo pip3 install virtualenv","yellow"))
-					print(u"\tAlso then try running %s from terminal\n" % text_colour("sudo apt-get update && sudo apt-get install libssl-dev","yellow"))
-
-				elif sys_platform == 'Darwin':
-
-					# Common failure is missing xcode tools
-					print(u"\tWere you prompted to install %s? This is required, try installing %s and rerun this script\n" % (text_colour("Xcode","yellow"),text_colour("Xcode","yellow")))
 
 	return True
 
@@ -546,45 +552,53 @@ def create_virt_env(virt_env_name, sys_platform, python_str):
 		
 		result = run_cmd("%s%spip list" % (venv_script_path,dir_delim))
 		print(u"\tVirtual Environment already exists...")
+		print(u"\t%s\n" % text_colour("SUCCESS","green"))
 		venv_exists = True
 		return str(venv_script_path) + dir_delim + "pip"
 
-	# Virtual Environment does not yet exist - need to create one
-	print(u"\tCreating %s Virtual Environment..." % text_colour(virt_env_name,"blue"))
-	print(u"\tPython string is %s\n" % text_colour(python_str,"cyan"))
+	if REMEDIATION:
+		# Virtual Environment does not yet exist - need to create one
+		print(u"\tCreating %s Virtual Environment..." % text_colour(virt_env_name,"blue"))
+		print(u"\tPython string is %s\n" % text_colour(python_str,"cyan"))
 
-	# Different commands for different system platforms to create virtual environment
-	if sys_platform == 'Windows':
-		result = run_cmd(python_str + (" -m venv %s" % virt_env_name))
-	elif sys_platform == 'Darwin':
-		#result = run_cmd("virtualenv %s" % virt_env_name)
-		result = run_cmd(python_str + (" -m virtualenv %s" % virt_env_name))
-	elif sys_platform == 'Linux':
-		#result = run_cmd("virtualenv %s" % virt_env_name)
-		result = run_cmd(python_str + (" -m virtualenv %s" % virt_env_name))	
+		# Different commands for different system platforms to create virtual environment
+		if sys_platform == 'Windows':
+			result = run_cmd(python_str + (" -m venv %s" % virt_env_name))
+		elif sys_platform == 'Darwin':
+			#result = run_cmd("virtualenv %s" % virt_env_name)
+			result = run_cmd(python_str + (" -m virtualenv %s" % virt_env_name))
+		elif sys_platform == 'Linux':
+			#result = run_cmd("virtualenv %s" % virt_env_name)
+			result = run_cmd(python_str + (" -m virtualenv %s" % virt_env_name))	
 
-	# Check if Virtual Environment installation was successful
-	result = run_cmd("%s %s%s%s" % (list_contents, virt_env_name, dir_delim, activate_dir))
-	python_exists = False
-	activate_exists = False
-	pip_exists = False
-	for entry in result:
-		if "python" in entry:
-			python_exists = True
-		if "activate" in entry:
-			activate_exists = True
-		if "pip" in entry:
-			pip_exists = True
+		# Check if Virtual Environment installation was successful
+		result = run_cmd("%s %s%s%s" % (list_contents, virt_env_name, dir_delim, activate_dir))
+		python_exists = False
+		activate_exists = False
+		pip_exists = False
+		for entry in result:
+			if "python" in entry:
+				python_exists = True
+			if "activate" in entry:
+				activate_exists = True
+			if "pip" in entry:
+				pip_exists = True
 
-	# Return validation of success or failure
-	if python_exists and activate_exists and pip_exists:
-		venv_success = True
-		print(u"\t%s\n" % text_colour("SUCCESS","green"))
-		print(u"\tVirtual Environment successfully created...")
-		return (u"%s%s%s%spip" % (virt_env_name,dir_delim,activate_dir,dir_delim))
+		# Return validation of success or failure
+		if python_exists and activate_exists and pip_exists:
+			venv_success = True
+			print(u"\t%s\n" % text_colour("SUCCESS","green"))
+			print(u"\tVirtual Environment successfully created...")
+			return (u"%s%s%s%spip" % (virt_env_name,dir_delim,activate_dir,dir_delim))
+		else:
+			print("\tVirtual Environment creation failed...")
+			return False
 	else:
-		print("\tVirtual Environment creation failed...")
-		return False
+		# No virtual environment found
+		print(u"\tVirtual Environment not found...")
+		print(u"\t%s\n" % text_colour("FAIL","red"))
+		print(u"%s\n" % text_colour("Will continue checking Python environment outside of Virtual Environment...","magenta"))
+		time.sleep(1)
 
 
 
@@ -691,92 +705,76 @@ def check_git(git_repo, repository_name, virt_env_name, sys_platform):
 		if "git version" in response[0]:
 			print(u"\t%s\n" % text_colour("SUCCESS","green"))
 
-			# Check which directory we are working in
-			response = run_cmd(pwd)
+			if REMEDIATION:
+				# Check which directory we are working in
+				response = run_cmd(pwd)
 
-			# Check if response was provided by shell
-			if len(response) > 0:
+				# Check if response was provided by shell
+				if len(response) > 0:
+					for each in response:
+						if virt_env_name in each:
+							work_dir = ""
+						else:
+							work_dir = virt_env_name + dir_delim
 
-				for each in response:
+				# Check if Git Repository has already been pulled
+				response = run_cmd(list_contents + " " + work_dir)
 
-					if virt_env_name in each:
+				# Check if response was provided by shell
+				if len(response) > 0:
 
-						work_dir = ""
+					repo_found = False
+
+					for entry in response:
+						if repo_name in entry:
+							repo_found = True
+
+					# Repository was found
+					if repo_found:
+
+						# Update the repo
+						print(u"\tRepository found locally, attempting to pull updates...")
+						response = run_cmd("git -C " + work_dir + dir_delim + repo_name + " pull")
+
+						# Verify the update - lazy here, need to fix
+						response = run_cmd(list_contents + " " + work_dir)
+
+						# Check if response was provided by shell
+						if len(response) > 0:
+
+							repo_found = False
+
+							for entry in response:
+								if repo_name in entry:
+									repo_found = True
+
+							if repo_found:
+								print(u"\t%s\n" % text_colour("SUCCESS","green"))
+							else:
+								print(u"\t%s\n" % text_colour("FAIL","red"))
 
 					else:
 
-						work_dir = virt_env_name + dir_delim
+						# Clone the repo
+						print(u"\tPulling remote repository...")
+						response = run_cmd("git clone " + git_repo + " " + work_dir + repo_name)
 
-			# Check if Git Repository has already been pulled
-			response = run_cmd(list_contents + " " + work_dir)
+						# Verify the update - lazy here, need to fix
+						response = run_cmd(list_contents + " " + work_dir)
 
-			# Check if response was provided by shell
-			if len(response) > 0:
+						# Check if response was provided by shell
+						if len(response) > 0:
 
-				repo_found = False
+							repo_found = False
 
-				for entry in response:
+							for entry in response:
+								if repo_name in entry:
+									repo_found = True
 
-					if repo_name in entry:
-
-						repo_found = True
-
-				# Repository was found
-				if repo_found:
-
-					# Update the repo
-					print(u"\tRepository found locally, attempting to pull updates...")
-					response = run_cmd("git -C " + work_dir + dir_delim + repo_name + " pull")
-
-					# Verify the update - lazy here, need to fix
-					response = run_cmd(list_contents + " " + work_dir)
-
-					# Check if response was provided by shell
-					if len(response) > 0:
-
-						repo_found = False
-
-						for entry in response:
-
-							if repo_name in entry:
-
-								repo_found = True
-
-						if repo_found:
-
-							print(u"\t%s\n" % text_colour("SUCCESS","green"))
-
-						else:
-
-							print(u"\t%s\n" % text_colour("FAIL","red"))
-
-				else:
-
-					# Clone the repo
-					print(u"\tPulling remote repository...")
-					response = run_cmd("git clone " + git_repo + " " + work_dir + repo_name)
-
-					# Verify the update - lazy here, need to fix
-					response = run_cmd(list_contents + " " + work_dir)
-
-					# Check if response was provided by shell
-					if len(response) > 0:
-
-						repo_found = False
-
-						for entry in response:
-
-							if repo_name in entry:
-
-								repo_found = True
-
-						if repo_found:
-
-							print(u"\t%s\n" % text_colour("SUCCESS","green"))
-
-						else:
-
-							print(u"\t%s\n" % text_colour("FAIL","red"))
+							if repo_found:
+								print(u"\t%s\n" % text_colour("SUCCESS","green"))
+							else:
+								print(u"\t%s\n" % text_colour("FAIL","red"))
 
 		else:
 
@@ -785,8 +783,8 @@ def check_git(git_repo, repository_name, virt_env_name, sys_platform):
 
 	else:
 
-			# Git does not exist
-			print(u"\t%s\n" % text_colour("FAIL","red"))
+		# Git does not exist
+		print(u"\t%s\n" % text_colour("FAIL","red"))
 
 	return False
 
@@ -820,16 +818,17 @@ if __name__ == "__main__":
 	if python_str == False:
 		exit()
 
-	# Check Virtual Environment Installation
-	print(u"\nChecking for Virtual Environment Python Library...\n")
-	required_libraries = ["virtualenv","requests","wheel"]
-	virt_env_installed = check_python_libraries(required_libraries, userPlatform, False)
+	if REMEDIATION:
+		# Check for Python Libraries required for Virtual Environment Installation
+		print(u"\nChecking for Virtual Environment Python Library...\n")
+		required_libraries = ["virtualenv","requests","wheel"]
+		virt_env_installed = check_python_libraries(required_libraries, userPlatform, False)
 
-	# Condition if pip not installed, virtual environment creation failed
-	if not virt_env_installed:
-		# Logging not yet implemented
-		#print(u"\nLogfile name is %s" % text_colour(log_file,"blue"))
-		exit()
+		# Condition if pip not installed, virtual environment creation failed
+		if not virt_env_installed:
+			# Logging not yet implemented
+			#print(u"\nLogfile name is %s" % text_colour(log_file,"blue"))
+			exit()
 
 	# Create Virtual Environment
 	print(u"\nChecking for Python Virtual Environment...\n")

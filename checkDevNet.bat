@@ -19,8 +19,12 @@ if errorlevel 1 (
 	echo Rerun this script after taking above action to verify installation
 ) ELSE  (
 	:: Run Python Script to check for Python version and Library requirements
-	::start /b python checkDevNet.py %virt_env%
-	call python checkDevNet.py %virt_env%
+	:: Get current folder name
+	for %%* in (.) do set cur_dir=%%~nx*
+
+	cd ..
+
+	call python %cur_dir%\checkDevNet.py %virt_env%
 
 	echo.
 	echo Python script finished execution

@@ -20,7 +20,9 @@ if [ -z "$path_var" ] ; then
 	exit 1
 else 
 	# Run Python Script to check for Python version and Library requirements
-	python3 checkDevNet.py $virt_env || python checkDevNet.py $virt_env
+	cur_dir=$(echo "${PWD##*/}")
+	cd ..
+	python3 $cur_dir/checkDevNet.py $virt_env || python $cur_dir/checkDevNet.py $virt_env
 
 	echo ""
 	echo "Python script finished execution"

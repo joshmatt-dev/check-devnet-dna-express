@@ -18,9 +18,10 @@ if errorlevel 1 (
 	echo 4. Tick 'Add Python to environment variables' and then click install
 	echo Rerun this script after taking above action to verify installation
 ) ELSE  (
-	:: Run Python Script to check for Python version and Library requirements
-	:: Get current folder name
+
 	for %%* in (.) do set cur_dir=%%~nx*
+
+	echo %cur_dir%
 
 	cd ..
 

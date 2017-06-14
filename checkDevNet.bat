@@ -22,11 +22,11 @@ if errorlevel 1 (
 
 	for %%* in (.) do set cur_dir=%%~nx*
 
-	echo %cur_dir%
+	echo !cur_dir!
 
 	cd ..
 
-	call python %cur_dir%\checkDevNet.py %virt_env%
+	call python !cur_dir!\checkDevNet.py %virt_env%
 
 	echo.
 	echo Python script finished execution

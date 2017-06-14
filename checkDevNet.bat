@@ -1,4 +1,5 @@
 @echo off
+SETLOCAL ENABLEDELAYEDEXPANSION
 set path_var=%PATH%
 set virt_env=%1
 

@@ -290,10 +290,10 @@ def check_python_version(major_release, minor_release, sys_platform):
 	elif major_release == 3:
 
 		# Check Python Minor release is at least .5
-		if minor_release < 5:
+		if minor_release < 4:
 
 			# Advise remediation
-			print(u"\tYou are running %s release, please upgrade to at least Python 3.5" % (text_colour("Python " + py_ver,"red")))
+			print(u"\tYou are running %s release, please upgrade to at least Python 3.4" % (text_colour("Python " + py_ver,"red")))
 			return False
 
 		else:

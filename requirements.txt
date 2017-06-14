@@ -1,0 +1,17 @@
+wheel
+requests
+netaddr
+pyang
+ncclient
+cffi
+cryptography
+enum34
+idna
+ipaddress
+lxml
+netaddr
+paramiko
+pyasn1
+pycparser
+setuptools
+six

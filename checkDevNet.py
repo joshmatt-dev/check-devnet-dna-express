@@ -527,7 +527,7 @@ def create_virt_env(virt_env_name, sys_platform, python_str):
 		wd = result[0].split(dir_delim)
 		wd_str = wd[-1]
 
-		if str(wd_str) == str(virt_env_name):
+		if virt_env_name in wd_str:
 			venv_script_path = activate_dir
 
 

@@ -134,6 +134,8 @@ def text_colour(string, colour):
 		return string
 	if userPlatform == 'Windows' and not platform.version().startswith("10"):
 		return string
+	if userPlatform == 'Windows':
+		return string
 
 	# ANSI Escape Code Strings
 	ansi_black = "\u001b[30m"
